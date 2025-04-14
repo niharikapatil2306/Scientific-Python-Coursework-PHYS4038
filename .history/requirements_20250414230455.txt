@@ -1,0 +1,7 @@
+tkinter
+yfinance
+sqlite3
+scipy
+matplotlib
+seaborn
+numpy
