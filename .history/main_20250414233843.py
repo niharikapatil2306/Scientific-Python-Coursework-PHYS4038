@@ -26,7 +26,7 @@ end_date = datetime.today().strftime("%Y-%m-%d")
 start_date = (datetime.today() - timedelta(days=365)).strftime("%Y-%m-%d")
 
 # Fetching data for benchmark stock S&P500
-benchmark_data = yf.download('^GSPC', start=start_date, end=end_date, auto_adjust=False)
+benchmark_data = yf.download('^GSPC', start=start_date, end=end_date)
 
 benchmark_data.columns = benchmark_data.columns.droplevel(1)
 
@@ -39,7 +39,7 @@ benchmark_data['Cumulative Return'] = ((1 + benchmark_data['Daily Return']).cump
 
 def fetch_stock_data(ticker, start_date=start_date, end_date=end_date):
     try:
-        stock_data = yf.download(ticker, start=start_date, end=end_date, auto_adjust=False)
+        stock_data = yf.download(ticker, start=start_date, end=end_date)
 
         # Handle empty DataFrame (no data found)
         if stock_data.empty:
@@ -333,12 +333,16 @@ class Stock:
 
     def update_current_price(self):
         try:
+            # Fetch the stock data from Yahoo Finance using the ticker symbol
             stock_data = yf.Ticker(self.ticker)
+            # Get the latest closing price of the stock
             self.current_price = float(stock_data.history(period="1d")['Close'].iloc[-1])
+            # Calculate the market value of the stock based on quantity and current price
             self.market_value = self.current_price * self.quantity
-            self.company_name = stock_data.info.get('shortName', 'N/A')
-        except Exception as e:
-            print(f"Error fetching {self.ticker}: {str(e)}")  # Log the error
+            # Get the company name for the stock
+            self.company_name = stock_data.info['shortName']
+        except:
+            # In case of an error (e.g., invalid ticker), set values to None
             self.current_price = None
             self.market_value = None
             self.company_name = None

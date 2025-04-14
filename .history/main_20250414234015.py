@@ -26,7 +26,7 @@ end_date = datetime.today().strftime("%Y-%m-%d")
 start_date = (datetime.today() - timedelta(days=365)).strftime("%Y-%m-%d")
 
 # Fetching data for benchmark stock S&P500
-benchmark_data = yf.download('^GSPC', start=start_date, end=end_date, auto_adjust=False)
+benchmark_data = yf.download(' S&P500', start=start_date, end=end_date)
 
 benchmark_data.columns = benchmark_data.columns.droplevel(1)
 
@@ -39,7 +39,7 @@ benchmark_data['Cumulative Return'] = ((1 + benchmark_data['Daily Return']).cump
 
 def fetch_stock_data(ticker, start_date=start_date, end_date=end_date):
     try:
-        stock_data = yf.download(ticker, start=start_date, end=end_date, auto_adjust=False)
+        stock_data = yf.download(ticker, start=start_date, end=end_date)
 
         # Handle empty DataFrame (no data found)
         if stock_data.empty:
@@ -325,23 +325,38 @@ class PortfolioRiskCalculator:
 class Stock:
     def __init__(self, ticker, quantity, buy_price):
         # Initialize the stock with a ticker symbol, quantity, and buy price
-        self.ticker = ticker.strip().upper().replace("$", "")  # Ensure the ticker symbol is in uppercase
+        self.ticker = ticker.upper()  # Ensure the ticker symbol is in uppercase
         print(self.ticker)
         self.quantity = quantity  # Set the quantity of shares owned
         self.buy_price = buy_price  # Set the buy price per share
         self.update_current_price()  # Call the method to update the current price of the stock
 
-    def update_current_price(self):
-        try:
-            stock_data = yf.Ticker(self.ticker)
-            self.current_price = float(stock_data.history(period="1d")['Close'].iloc[-1])
-            self.market_value = self.current_price * self.quantity
-            self.company_name = stock_data.info.get('shortName', 'N/A')
-        except Exception as e:
-            print(f"Error fetching {self.ticker}: {str(e)}")  # Log the error
-            self.current_price = None
-            self.market_value = None
-            self.company_name = None
+    def add_stock(self):
+        ticker = self.entry_ticker.get().strip().upper()
+        quantity = self.entry_quantity.get()
+        buy_price = self.entry_price.get()
+
+        # Validate inputs
+        if not quantity.isdigit() or not buy_price.replace('.', '', 1).isdigit():
+            messagebox.showerror("Error", "Invalid quantity or price.")
+            return
+
+        quantity = int(quantity)
+        buy_price = float(buy_price)
+
+        # Check if ticker is valid
+        new_stock = Stock(ticker, quantity, buy_price)
+        if new_stock.current_price is None:
+            messagebox.showerror("Error", f"Invalid ticker: {ticker} or data unavailable.")
+            return
+
+        # Add to portfolio
+        self.portfolio.add_stock(ticker, quantity, buy_price)
+        self.update_portfolio_table()
+        self.app.save_portfolio()
+        self.app.load_portfolio()
+        self.update_stock_dropdown()
+        self.update_risk_label()
 
 class Portfolio:
     def __init__(self):
@@ -527,7 +542,7 @@ class Dashboard(tk.Frame):
         self.app.load_portfolio()
         self.update_stock_dropdown()
         self.update_risk_label()
-        
+
     def update_stock_dropdown(self):
         # Update the stock dropdown list with the latest portfolio stocks
         self.stock_dropdown.delete(0, tk.END)

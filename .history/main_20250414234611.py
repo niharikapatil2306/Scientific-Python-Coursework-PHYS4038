@@ -26,7 +26,7 @@ end_date = datetime.today().strftime("%Y-%m-%d")
 start_date = (datetime.today() - timedelta(days=365)).strftime("%Y-%m-%d")
 
 # Fetching data for benchmark stock S&P500
-benchmark_data = yf.download('^GSPC', start=start_date, end=end_date, auto_adjust=False)
+benchmark_data = yf.download('^GSPC', start=start_date, end=end_date)
 
 benchmark_data.columns = benchmark_data.columns.droplevel(1)
 
@@ -39,7 +39,7 @@ benchmark_data['Cumulative Return'] = ((1 + benchmark_data['Daily Return']).cump
 
 def fetch_stock_data(ticker, start_date=start_date, end_date=end_date):
     try:
-        stock_data = yf.download(ticker, start=start_date, end=end_date, auto_adjust=False)
+        stock_data = yf.download(ticker, start=start_date, end=end_date)
 
         # Handle empty DataFrame (no data found)
         if stock_data.empty:
@@ -332,6 +332,7 @@ class Stock:
         self.update_current_price()  # Call the method to update the current price of the stock
 
     def update_current_price(self):
+
         try:
             stock_data = yf.Ticker(self.ticker)
             self.current_price = float(stock_data.history(period="1d")['Close'].iloc[-1])

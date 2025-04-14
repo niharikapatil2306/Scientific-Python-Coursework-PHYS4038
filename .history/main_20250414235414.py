@@ -39,7 +39,7 @@ benchmark_data['Cumulative Return'] = ((1 + benchmark_data['Daily Return']).cump
 
 def fetch_stock_data(ticker, start_date=start_date, end_date=end_date):
     try:
-        stock_data = yf.download(ticker, start=start_date, end=end_date, auto_adjust=False)
+        stock_data = yf.download(ticker, start=start_date, end=end_date)
 
         # Handle empty DataFrame (no data found)
         if stock_data.empty:
